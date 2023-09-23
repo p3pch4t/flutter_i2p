@@ -2,7 +2,6 @@ library flutter_i2p;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dart_i2p/dart_i2p.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,6 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
   }
 
   Future<void> initLogView() async {
-    int curIndex = 0;
     if (widget.i2pdConf.logfile == null) {
       terminal.write(
         "CRIT: i2p.i2pdConf.logfile is null, we have no evidence "
