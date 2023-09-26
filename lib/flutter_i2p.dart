@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:dart_i2p/dart_i2p.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_i2p/switch_platform.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/core.dart';
@@ -46,7 +47,7 @@ class I2pdEnsure extends StatefulWidget {
       );
     }
     final lastChecked = prefs.getString("flutter_i2p.lastChecked");
-    if (lastChecked == DART_I2P_VERSION && !kDebugMode) {
+    if (lastChecked == DART_I2P_VERSION) {
       print("skipping (lastChecked == DART_I2P_VERSION) - $lastChecked ");
       return app;
     }
@@ -76,19 +77,10 @@ class _I2pdEnsureState extends State<I2pdEnsure> {
   bool i2pdOk = true;
   String log = "";
 
-  final binPathOverrideCtrl = TextEditingController();
-
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        if (prefs.getString("flutter_i2p.binPathOverride") != null) {
-          binPathOverrideCtrl.text =
-              prefs.getString("flutter_i2p.binPathOverride")!;
-        }
-      });
-    });
+
     for (var bin in widget.requiredBinaries) {
       switch (bin) {
         case I2pdBinaries.i2pd:
@@ -176,9 +168,15 @@ class _I2pdEnsureState extends State<I2pdEnsure> {
           onPressed: !i2pdOk
               ? null
               : () async {
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
-                    builder: (context) => widget.app,
-                  ));
+                  SharedPreferences.getInstance().then(
+                    (prefs) => prefs.setString(
+                        'flutter_i2p.lastChecked', DART_I2P_VERSION),
+                  );
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => widget.app,
+                    ),
+                  );
                 },
           child: const Text("Continue"),
         ),
@@ -278,8 +276,19 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
     // This is temorary, and should be replaced, but is rather non-blocking
     // and on a not-so-important list.
     final pty = Pty.start(
-      'tail',
-      arguments: ['-f', widget.i2pdConf!.logfile!],
+      switch (getPlatform()) {
+        OS.windows => "powershell.exe",
+        _ => 'tail',
+      },
+      arguments: switch (getPlatform()) {
+        OS.windows => [
+            '-Command',
+            'Get-Content',
+            widget.i2pdConf!.logfile!,
+            '-Wait' '-Tail' '100'
+          ],
+        _ => ['-f', widget.i2pdConf!.logfile!],
+      },
       columns: terminal.viewWidth,
       rows: terminal.viewHeight,
     );
@@ -320,13 +329,11 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
         body: TabBarView(
           children: [
             TerminalView(terminal),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  TextViewSettings(dbKey: 'flutter_i2p.binPathOverride'),
-                ],
-              ),
+            const Column(
+              children: [
+                TextViewSettings(dbKey: 'flutter_i2p.binPathOverride'),
+                TextViewSettings(dbKey: 'flutter_i2p.lastChecked'),
+              ],
             ),
           ],
         ),
@@ -363,16 +370,19 @@ class _TextViewSettingsState extends State<TextViewSettings> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: tc,
-      onChanged: (value) async {
-        await prefs.setString(widget.dbKey, value);
-        print('value updated: ${widget.dbKey}, $value');
-      },
-      decoration: InputDecoration(
-        label: Text(widget.dbKey),
-        hintText: widget.dbKey,
-        border: const OutlineInputBorder(),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: tc,
+        onChanged: (value) async {
+          await prefs.setString(widget.dbKey, value);
+          print('value updated: ${widget.dbKey}, $value');
+        },
+        decoration: InputDecoration(
+          label: Text(widget.dbKey),
+          hintText: widget.dbKey,
+          border: const OutlineInputBorder(),
+        ),
       ),
     );
   }
