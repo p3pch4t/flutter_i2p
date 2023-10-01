@@ -32,7 +32,7 @@ class I2pdEnsure extends StatefulWidget {
       I2pdBinaries.keyinfo
     ],
   }) async {
-    WidgetsFlutterBinding.ensureInitialized();
+    // WidgetsFlutterBinding.ensureInitialized();
     final prefs = await SharedPreferences.getInstance();
     final binPathOverride = prefs.getString("flutter_i2p.binPathOverride");
     if (binPathOverride != null && binPathOverride != "") {
@@ -117,7 +117,7 @@ class _I2pdEnsureState extends State<I2pdEnsure> {
               .existsSync()) {
             setState(() {
               i2pdOk = false;
-              log += "\n${i2pdBinariesToString(bin)} missing";
+              log += "\n${widget.binPath}/${i2pdBinariesToString(bin)} missing";
             });
           }
       }
