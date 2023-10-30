@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 library flutter_i2p;
 
 import 'dart:async';
@@ -6,7 +8,6 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:dart_i2p/dart_i2p.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i2p/switch_platform.dart';
 import 'package:flutter_pty/flutter_pty.dart';
@@ -48,7 +49,7 @@ class I2pdEnsure extends StatefulWidget {
     }
     final lastChecked = prefs.getString("flutter_i2p.lastChecked");
     if (lastChecked == DART_I2P_VERSION) {
-      print("skipping (lastChecked == DART_I2P_VERSION) - $lastChecked ");
+      debugPrint("skipping (lastChecked == DART_I2P_VERSION) - $lastChecked ");
       return app;
     }
     return I2pdEnsure(
@@ -102,7 +103,7 @@ class _I2pdEnsureState extends State<I2pdEnsure> {
                   setState(() {
                     i2pdOk = false;
                     log +=
-                        "\ni2pd not ok - ${value.exitCode}, ${value.stdout}, ${value.stderr}";
+                        "\n${widget.binPath} - i2pd not ok - exitCode: ${value.exitCode}, stdout: ${value.stdout}, stderr: ${value.stderr}";
                   });
                 }
               }
@@ -273,7 +274,7 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
     // TODO(mrcyjanek): I'm fully aware how much this adds to the app
     // But after spending way too much time on trying to get this to work I'll
     // just remain happy with this solution.
-    // This is temorary, and should be replaced, but is rather non-blocking
+    // This is temporary, and should be replaced, but is rather non-blocking
     // and on a not-so-important list.
     final pty = Pty.start(
       switch (getPlatform()) {
@@ -345,7 +346,6 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
 class TextViewSettings extends StatefulWidget {
   const TextViewSettings({Key? key, required this.dbKey}) : super(key: key);
 
-  @override
   final String dbKey;
 
   @override
@@ -376,7 +376,7 @@ class _TextViewSettingsState extends State<TextViewSettings> {
         controller: tc,
         onChanged: (value) async {
           await prefs.setString(widget.dbKey, value);
-          print('value updated: ${widget.dbKey}, $value');
+          debugPrint('value updated: ${widget.dbKey}, $value');
         },
         decoration: InputDecoration(
           label: Text(widget.dbKey),
