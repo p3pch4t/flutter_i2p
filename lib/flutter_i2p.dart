@@ -60,11 +60,11 @@ class I2pdEnsure extends StatefulWidget {
   }
 
   const I2pdEnsure({
-    Key? key,
+    super.key,
     required this.app,
     required this.binPath,
     required this.requiredBinaries,
-  }) : super(key: key);
+  });
 
   final Widget app;
   final String binPath;
@@ -191,8 +191,8 @@ class DownloadExeButton extends StatefulWidget {
     required this.bin,
     required this.binPath,
     required this.required,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final I2pdBinaries bin;
   final String binPath;
@@ -242,7 +242,7 @@ class _DownloadExeButtonState extends State<DownloadExeButton> {
 }
 
 class I2pConfigPage extends StatefulWidget {
-  const I2pConfigPage({Key? key, this.i2pdConf}) : super(key: key);
+  const I2pConfigPage({super.key, this.i2pdConf});
   final I2pdConf? i2pdConf;
 
   @override
@@ -344,7 +344,7 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
 }
 
 class TextViewSettings extends StatefulWidget {
-  const TextViewSettings({Key? key, required this.dbKey}) : super(key: key);
+  const TextViewSettings({super.key, required this.dbKey});
 
   final String dbKey;
 
