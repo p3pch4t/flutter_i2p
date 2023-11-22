@@ -146,7 +146,7 @@ class _I2pdEnsureState extends State<I2pdEnsure> {
           children: [
             Text(i2pdVersion),
             Text(log),
-            if (Platform.isWindows && !i2pdOk)
+            if ((Platform.isWindows || Platform.isLinux) && !i2pdOk)
               ListView.builder(
                 itemCount: I2pdBinaries.values.length,
                 shrinkWrap: true,
@@ -215,9 +215,20 @@ class _DownloadExeButtonState extends State<DownloadExeButton> {
       onPressed: isDownloading
           ? null
           : () async {
-              final arch = Abi.current() == Abi.windowsX64 ? '64' : '32';
+              String distPath = switch (getPlatform()) {
+                OS.windows =>
+                  "windows/${Abi.current() == Abi.windowsX64 ? '64' : '32'}",
+                OS.linux => switch (Abi.current()) {
+                    Abi.linuxArm => "linux_arm",
+                    Abi.linuxArm64 => "linux_arm64",
+                    Abi.linuxIA32 => "linux_i386",
+                    Abi.linuxX64 => "linux_amd64",
+                    _ => "unknown",
+                  },
+                _ => "",
+              };
               final dlurl =
-                  "https://git.mrcyjanek.net/p3pch4t/flutter_i2p_bins-prebuild/raw/branch/i2pd_2.49.0/windows/$arch/";
+                  "https://git.mrcyjanek.net/p3pch4t/flutter_i2p_bins-prebuild/raw/branch/i2pd_2.49.0/$distPath/";
               setState(() {
                 isDownloading = true;
               });
@@ -226,7 +237,10 @@ class _DownloadExeButtonState extends State<DownloadExeButton> {
                   .get(Uri.parse('$dlurl${i2pdBinariesToString(widget.bin)}'))
                   .then(
                 (response) {
-                  File(binPath).writeAsBytes(response.bodyBytes);
+                  File(binPath).writeAsBytes(response.bodyBytes, flush: true);
+                  if (getPlatform() == OS.linux) {
+                    Process.run("chmod", ["+x", binPath]);
+                  }
                 },
               );
               setState(() {
