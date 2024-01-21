@@ -1,0 +1,16 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "prConcurrentLimit": 100,
+    "prHourlyLimit": 20,
+    "packageRules": [
+        {
+            "matchPackageNames": [
+                "dart_i2p",
+                "flutter_pty"
+            ],
+            "registryUrls": [
+                "https://git.mrcyjanek.net/api/packages/p3pch4t/pub/"
+            ]
+        }
+    ]
+}
