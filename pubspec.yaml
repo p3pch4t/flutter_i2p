@@ -20,7 +20,7 @@ dependencies:
   http: 1.1.0
   dart_i2p:
     hosted: https://git.mrcyjanek.net/api/packages/p3pch4t/pub/
-    version: 1.0.0+20
+    version: ^1.0.0+22
 
 dev_dependencies:
   flutter_test:
