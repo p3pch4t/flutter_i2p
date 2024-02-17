@@ -3,17 +3,13 @@
 library flutter_i2p;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
 import 'package:dart_i2p/dart_i2p.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i2p/switch_platform.dart';
-import 'package:flutter_pty/flutter_pty.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:xterm/core.dart';
-import 'package:xterm/ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
 
@@ -264,66 +260,27 @@ class I2pConfigPage extends StatefulWidget {
 }
 
 class _I2pConfigPageState extends State<I2pConfigPage> {
-  final terminal = Terminal();
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.endOfFrame.then(
-      (_) {
-        if (mounted) unawaited(initLogView());
-      },
-    );
   }
+
+  String log = "Loading...";
 
   Future<void> initLogView() async {
     if (widget.i2pdConf?.logfile == null) {
-      terminal.write(
-        "CRIT: i2p.i2pdConf.logfile is null, we have no evidence "
-        "i2pd logging anything.",
-      );
+      setState(() {
+        log = "CRIT: i2p.i2pdConf.logfile is null, we have no evidence "
+            "i2pd logging anything.";
+      });
       return;
     }
 
-    // TODO(mrcyjanek): I'm fully aware how much this adds to the app
-    // But after spending way too much time on trying to get this to work I'll
-    // just remain happy with this solution.
-    // This is temporary, and should be replaced, but is rather non-blocking
-    // and on a not-so-important list.
-    final pty = Pty.start(
-      switch (getPlatform()) {
-        OS.windows => "powershell.exe",
-        _ => 'tail',
-      },
-      arguments: switch (getPlatform()) {
-        OS.windows => [
-            '-Command',
-            'Get-Content',
-            widget.i2pdConf!.logfile!,
-            '-Wait' '-Tail' '100'
-          ],
-        _ => ['-f', widget.i2pdConf!.logfile!],
-      },
-      columns: terminal.viewWidth,
-      rows: terminal.viewHeight,
-    );
-
-    pty.output
-        .cast<List<int>>()
-        .transform(const Utf8Decoder())
-        .listen(terminal.write);
-
-    pty.exitCode.then((code) {
-      terminal.write('the process exited with exit code $code');
+    File(widget.i2pdConf!.logfile!).readAsString().then((value) {
+      setState(() {
+        log = value;
+      });
     });
-
-    terminal.onOutput = (data) {
-      pty.write(const Utf8Encoder().convert(data));
-    };
-
-    terminal.onResize = (w, h, pw, ph) {
-      pty.resize(h, w);
-    };
   }
 
   @override
@@ -343,7 +300,10 @@ class _I2pConfigPageState extends State<I2pConfigPage> {
         // flutter_i2p.binPathOverride
         body: TabBarView(
           children: [
-            TerminalView(terminal),
+            SelectableText(
+              log,
+              style: const TextStyle(fontFamily: "monospace"),
+            ),
             const Column(
               children: [
                 TextViewSettings(dbKey: 'flutter_i2p.binPathOverride'),
